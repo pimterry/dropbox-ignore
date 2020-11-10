@@ -10,11 +10,24 @@ EOF
 }
 
 watch_pattern() {
-    printf "Watching $1 for pattern $2...\n"
+    local watch_path=$1
+    shift
 
-    inotifywait -m -e create -e moved_to --format %w%f --recursive . | (
+    echo "Watching $watch_path for patterns: $@...\n"
+
+    local filter=()
+    local pattern_count=$#
+    for i in `seq 1 $pattern_count`; do
+        local pattern=${!i}
+        filter+=(-path "$pattern")
+        if [[ $i -ne $pattern_count ]]; then
+            filter+=(-o)
+        fi
+    done
+
+    inotifywait -m -e create -e moved_to --format %w%f --recursive $watch_path | (
         while read file; do
-            if [[ -n $(find "$file" -path "$2" -prune) ]]; then
+            if [[ -n $(find "$file" "${filter[@]}" -prune) ]]; then
                 ignore_file $file
             fi
         done

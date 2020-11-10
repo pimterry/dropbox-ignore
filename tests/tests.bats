@@ -125,3 +125,29 @@ teardown() {
     run $dbi is-ignored ./new-dir/file.txt
     assert_success
 }
+
+@test "Can automatically ignore files from multiple patterns" {
+    $dbi watch . '*.txt' '*/.git' &
+    background_pid=$!
+    sleep 0.5
+
+    mkdir new-dir
+    touch new-dir/file.md
+    touch new-dir/file.txt
+    mkdir new-dir/.git
+    sleep 0.1
+
+    # Ignores new matching files
+    run $dbi is-ignored ./new-dir/file.txt
+    assert_success
+
+    # Ignores new matching directories
+    run $dbi is-ignored ./new-dir/.git
+    assert_success
+
+    # Doesn't ignore non-matching files
+    run $dbi is-ignored ./new-dir/
+    assert_failure
+    run $dbi is-ignored ./new-dir/file.md
+    assert_failure
+}
