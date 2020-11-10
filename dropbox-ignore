@@ -13,7 +13,7 @@ watch_pattern() {
     local watch_path=$1
     shift
 
-    echo "Watching $watch_path for patterns: $@...\n"
+    printf "Watching $watch_path for patterns: $@...\n"
 
     local filter=()
     local pattern_count=$#
@@ -36,13 +36,13 @@ watch_pattern() {
 
 ignore_file() {
     attr -q -s com.dropbox.ignored -V 1 $1
-    echo "Ignored $1"
+    printf "Ignored $1\n"
 }
 export -f ignore_file
 
 unignore_file() {
     attr -q -r com.dropbox.ignored $1
-    echo "Unignored $1"
+    printf "Unignored $1\n"
 }
 export -f unignore_file
 
