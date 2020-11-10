@@ -17,7 +17,7 @@ Fortunately, in 2020 Dropbox added a feature allowing files to be manually ignor
 ## Setup
 
 * Only works on Linux, for now:
-    * Could easily be extended to Mac, just needs to detect Mac & translate `attr` to the [equivalent `xattr` commands](https://help.dropbox.com/files-folders/restore-delete/ignored-files), and then lots of testing.
+    * Could easily be extended to Mac. Needs to detect Mac & translate `attr` to the [equivalent `xattr` commands](https://help.dropbox.com/files-folders/restore-delete/ignored-files), and swap inotify for a local equivalent to watch file changes, and then lots of testing.
     * Could probably be extended to Windows, but will require more translation (should it require bash on Windows, or should we try to support powershell/cmd/other?)
 * Requires various standard tools including `bash`, `find` and `xargs`, all probably installed by default
 * Requires [`attr`](https://linux.die.net/man/5/attr) to manage Dropbox ignore attributes, and [`fswatch`](https://github.com/emcrisostomo/fswatch) to watch files. These might not be installed by default, but widely available with `sudo apt install attr fswatch` or similar.
@@ -34,7 +34,7 @@ This configures your system to allow monitoring up to 100,000 folders.
 
 The full list of commands are below, but what you usually want to do is:
 
-* Install the `dropbox-ignore` script somewhere somewhere (e.g. `/usr/local/bin/dropbox-ignore`).
+* Install the [`dropbox-ignore`](dropbox-ignore) script somewhere somewhere (e.g. `/usr/local/bin/dropbox-ignore`).
 * Make sure it's executable: `chmod +x /usr/local/bin/dropbox-ignore`
 * Create a file of the patterns you want to ignore, perhaps a `~/Dropbox/.dropboxignore` file like:
     ```
