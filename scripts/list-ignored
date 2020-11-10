@@ -1,4 +1,4 @@
 #!/bin/bash
 set -e
 
-find $1 -exec ./is-ignored.sh {} \; -print
+find "$1" -exec $(dirname $0)/is-ignored {} \; -print
