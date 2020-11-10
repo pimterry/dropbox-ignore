@@ -5,7 +5,7 @@ load 'libs/bats-assert/load'
 
 load 'helpers'
 
-dbi=$(pwd)/scripts/
+dbi=$(pwd)/dropbox-ignore
 background_pid=''
 
 setup() {
@@ -24,18 +24,18 @@ teardown() {
 
 @test "Can ignore an individual file" {
     touch ./test-file
-    $dbi/ignore-file ./test-file
+    $dbi ignore ./test-file
 
-    run $dbi/is-ignored ./test-file
+    run $dbi is-ignored ./test-file
     assert_success
 }
 
 @test "Can unignore an individual file" {
     touch ./test-file
-    $dbi/ignore-file ./test-file
-    $dbi/unignore-file ./test-file
+    $dbi ignore ./test-file
+    $dbi unignore ./test-file
 
-    run $dbi/is-ignored ./test-file
+    run $dbi is-ignored ./test-file
     assert_failure
 }
 
@@ -44,13 +44,13 @@ teardown() {
     touch ./file.txt
     touch ./file.md
 
-    $dbi/ignore-pattern . '*.txt'
+    $dbi ignore . '*.txt'
 
-    run $dbi/is-ignored ./file.txt
+    run $dbi is-ignored ./file.txt
     assert_success
-    run $dbi/is-ignored ./file.md
+    run $dbi is-ignored ./file.md
     assert_failure
-    run $dbi/is-ignored ./txt
+    run $dbi is-ignored ./txt
     assert_failure
 }
 
@@ -60,16 +60,16 @@ teardown() {
     touch ./file2.txt
     touch ./file.md
 
-    $dbi/ignore-pattern . '*.txt'
-    $dbi/unignore-pattern . '*2.txt'
+    $dbi ignore . '*.txt'
+    $dbi unignore . '*2.txt'
 
-    run $dbi/is-ignored ./file1.txt
+    run $dbi is-ignored ./file1.txt
     assert_success
-    run $dbi/is-ignored ./file2.txt
+    run $dbi is-ignored ./file2.txt
     assert_failure
-    run $dbi/is-ignored ./file.md
+    run $dbi is-ignored ./file.md
     assert_failure
-    run $dbi/is-ignored ./txt
+    run $dbi is-ignored ./txt
     assert_failure
 }
 
@@ -79,8 +79,8 @@ teardown() {
     touch ./file2.txt
     touch ./file.md
 
-    $dbi/ignore-pattern . '*.txt'
-    run $dbi/list-ignored .
+    $dbi ignore . '*.txt'
+    run $dbi list-ignored .
 
     assert_equal $(echo "$output" | wc -l) 2
     assert_line "./file1.txt"
@@ -91,7 +91,7 @@ teardown() {
     touch ./file1.txt
     touch ./file2.md
 
-    $dbi/watch-pattern . '*.txt' &
+    $dbi watch . '*.txt' &
     background_pid=$!
 
     touch ./file3.txt
@@ -99,22 +99,22 @@ teardown() {
     sleep 0.1
 
     # Should ignore new matching files:
-    run $dbi/is-ignored ./file3.txt
+    run $dbi is-ignored ./file3.txt
     assert_success
 
     # Should not ignore non-matching files:
-    run $dbi/is-ignored ./file4.md
+    run $dbi is-ignored ./file4.md
     assert_failure
 
     # Should not touch existing files:
-    run $dbi/is-ignored ./file1.txt
+    run $dbi is-ignored ./file1.txt
     assert_failure
-    run $dbi/is-ignored ./file2.md
+    run $dbi is-ignored ./file2.md
     assert_failure
 }
 
 @test "Can automatically ignore files in new subdirectories" {
-    $dbi/watch-pattern . '*.txt' &
+    $dbi watch . '*.txt' &
     background_pid=$!
     sleep 0.5
 
@@ -122,6 +122,6 @@ teardown() {
     touch new-dir/file.txt
     sleep 0.1
 
-    run $dbi/is-ignored ./new-dir/file.txt
+    run $dbi is-ignored ./new-dir/file.txt
     assert_success
 }

@@ -1,4 +1,0 @@
-#!/bin/bash
-set -e
-
-find "$1" -path "$2" -prune -print0 | xargs -0 -r -n1 -P8 $(dirname $0)/unignore-file

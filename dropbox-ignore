@@ -1,0 +1,129 @@
+#!/usr/bin/env bash
+set -e
+
+dropbox_ignore_version=0.1.0
+version() {
+  local name=$(basename $0)
+	cat <<EOF
+$name $dropbox_ignore_version
+EOF
+}
+
+watch_pattern() {
+    printf "Watching $1 for pattern $2...\n"
+
+    inotifywait -m -e create -e moved_to --format %w%f --recursive . | (
+        while read file; do
+            if [[ -n $(find "$file" -path "$2" -prune) ]]; then
+                ignore_file $file
+            fi
+        done
+    )
+}
+
+ignore_file() {
+    attr -q -s com.dropbox.ignored -V 1 $1
+    echo "Ignored $1"
+}
+export -f ignore_file
+
+unignore_file() {
+    attr -q -r com.dropbox.ignored $1
+    echo "Unignored $1"
+}
+export -f unignore_file
+
+ignore_pattern() {
+    find "$1" -path "$2" -prune -print0 | xargs -0 -r -n1 -P8 bash -c 'ignore_file "$0"'
+}
+
+unignore_pattern() {
+    find "$1" -path "$2" -prune -print0 | xargs -0 -r -n1 -P8 bash -c 'unignore_file "$0"'
+}
+
+ignore_something() {
+    if [[ $# -gt 1 ]]; then
+        ignore_pattern "$@"
+    else
+        ignore_file "$@"
+    fi
+}
+
+unignore_something() {
+    if [[ $# -gt 1 ]]; then
+        unignore_pattern "$@"
+    else
+        unignore_file "$@"
+    fi
+}
+
+is_ignored() {
+    attr -g com.dropbox.ignored $1 >/dev/null 2>&1
+}
+export -f is_ignored
+
+list_ignored() {
+    find "$1" -exec bash -c 'is_ignored "$0"' {} \; -print
+}
+
+usage() {
+  local name=$(basename $0)
+	cat <<EOF
+$name is a tool to automatically managed your ignored files in Dropbox.
+
+Usage:
+    $name watch <path> <pattern>    # Watch a path, ignoring new files matching a given pattern
+    $name ignore <file>             # Ignore an individual file
+    $name ignore <path> <pattern>   # Ignore everything in a path matching a pattern
+    $name unignore <file>           # Unignore an individual file
+    $name unignore <file> <pattern> # Unignore everything in a path matching a pattern
+    $name is-ignored <file>         # Check if a file is ignored
+    $name list-ignored <path>       # Recursive list all ignored files in a path
+EOF
+}
+
+main() {
+    local ret=0
+    local cmd=""
+
+    if [ -z "$1" ]; then
+        printf "No command specified\n\n"
+        usage
+        exit 1
+    fi
+
+    case "$1" in
+        "watch" )
+            cmd="watch_pattern"
+            ;;
+        "ignore" )
+            cmd="ignore_something"
+            ;;
+        "unignore" )
+            cmd="unignore_something"
+            ;;
+        "is-ignored" )
+            cmd="is_ignored"
+            ;;
+        "list-ignored" )
+            cmd="list_ignored"
+            ;;
+        --help | -help | -h )
+            cmd="usage"
+            ;;
+        --version | -version )
+            cmd="version"
+            ;;
+        * )
+            printf "$1 is not a recognized command.\n\n"
+            cmd="usage"
+            ret=1
+            ;;
+    esac
+    shift
+
+    $cmd "$@"
+    ret=$[$ret+$?]
+    exit $ret
+}
+main "$@"
