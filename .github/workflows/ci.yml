@@ -8,4 +8,5 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: true
+      - run: sudo apt install attr
       - run: ./run-tests.sh
