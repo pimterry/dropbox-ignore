@@ -8,5 +8,5 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: true
-      - run: sudo apt install attr
+      - run: sudo apt install attr inotify-tools
       - run: ./run-tests.sh
